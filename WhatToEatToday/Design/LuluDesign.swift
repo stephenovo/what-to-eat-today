@@ -69,7 +69,7 @@ struct LuluBrandMark: View {
             .frame(width: compact ? 30 : 38, height: compact ? 30 : 38)
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("今天吃什么")
+                Text("今天吃这个")
                     .font(.system(size: compact ? 15 : 18, weight: .bold, design: .rounded))
                     .foregroundStyle(LuluPalette.ink)
                 if !compact {
