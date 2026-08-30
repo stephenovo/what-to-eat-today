@@ -1,5 +1,7 @@
 # 构建与验收产物
 
+当前 IPA 对应版本 `1.0.0 (3)`，生成于 2026-08-30。
+
 - `empty-home.png`：空冰箱首次启动状态
 - `recommended-home.png`：Debug 演示库存下的本地推荐状态
 - `WhatToEatToday-Development.ipa`：Development 签名包，只能安装到当前团队已登记的设备
