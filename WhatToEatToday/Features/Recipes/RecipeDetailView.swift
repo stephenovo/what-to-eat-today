@@ -54,28 +54,37 @@ struct RecipeDetailView: View {
 
     private var ingredients: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeading(title: "需要这些", subtitle: "按 2 人份")
-            VStack(spacing: 0) {
-                ForEach(Array(recipe.ingredients.enumerated()), id: \.element) { index, ingredient in
-                    HStack(spacing: 12) {
-                        Text(ingredient.emoji).font(.system(size: 26))
-                        Text(ingredient.name)
-                            .font(.system(size: 14, weight: .semibold))
-                        Spacer()
-                        Text(ingredient.amount)
-                            .font(.system(size: 12))
-                            .foregroundStyle(LuluPalette.sage)
-                        let hasIngredient = !recommendation.missing.contains(ingredient)
-                        Image(systemName: hasIngredient ? "checkmark.circle.fill" : "plus.circle")
-                            .foregroundStyle(hasIngredient ? LuluPalette.green : LuluPalette.red)
-                            .accessibilityLabel(hasIngredient ? "冰箱里有" : "需要购买")
-                    }
-                    .padding(.vertical, 11)
-                    if index < recipe.ingredients.count - 1 { Divider().foregroundStyle(LuluPalette.line) }
-                }
+            SectionHeading(title: "主要食材", subtitle: "按 2 人份")
+            requirementCard(recipe.primaryIngredients)
+            if !recipe.seasonings.isEmpty {
+                SectionHeading(title: "所需佐料", subtitle: "也会参与推荐和缺料计算")
+                    .padding(.top, 4)
+                requirementCard(recipe.seasonings)
             }
-            .luluCard()
         }
+    }
+
+    private func requirementCard(_ requirements: [RecipeIngredient]) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(requirements.enumerated()), id: \.element) { index, ingredient in
+                HStack(spacing: 12) {
+                    Text(ingredient.emoji).font(.system(size: 26))
+                    Text(ingredient.name)
+                        .font(.system(size: 14, weight: .semibold))
+                    Spacer()
+                    Text(ingredient.amount)
+                        .font(.system(size: 12))
+                        .foregroundStyle(LuluPalette.sage)
+                    let hasIngredient = !recommendation.missing.contains(ingredient)
+                    Image(systemName: hasIngredient ? "checkmark.circle.fill" : "plus.circle")
+                        .foregroundStyle(hasIngredient ? LuluPalette.green : LuluPalette.red)
+                        .accessibilityLabel(hasIngredient ? "冰箱里有" : "需要购买")
+                }
+                .padding(.vertical, 11)
+                if index < requirements.count - 1 { Divider().foregroundStyle(LuluPalette.line) }
+            }
+        }
+        .luluCard()
     }
 
     private var shopping: some View {

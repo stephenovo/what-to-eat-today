@@ -5,7 +5,10 @@ final class RecommendationEngineTests: XCTestCase {
     func testReadyRecipeRanksAheadOfMissingRecipe() {
         let pantry = [
             PantryItem(id: UUID(), ingredientID: "tomato", name: "番茄", emoji: "🍅", quantity: 2, unit: "个", addedAt: .now, expiryDate: nil),
-            PantryItem(id: UUID(), ingredientID: "egg", name: "鸡蛋", emoji: "🥚", quantity: 3, unit: "个", addedAt: .now, expiryDate: nil)
+            PantryItem(id: UUID(), ingredientID: "egg", name: "鸡蛋", emoji: "🥚", quantity: 3, unit: "个", addedAt: .now, expiryDate: nil),
+            PantryItem(id: UUID(), ingredientID: "cooking_oil", name: "食用油", emoji: "🫗", quantity: 500, unit: "毫升", addedAt: .now, expiryDate: nil),
+            PantryItem(id: UUID(), ingredientID: "salt", name: "食盐", emoji: "🧂", quantity: 1, unit: "袋", addedAt: .now, expiryDate: nil),
+            PantryItem(id: UUID(), ingredientID: "sugar", name: "白糖", emoji: "🍚", quantity: 1, unit: "袋", addedAt: .now, expiryDate: nil)
         ]
 
         let results = RecommendationEngine.recommendations(pantry: pantry)
@@ -14,7 +17,7 @@ final class RecommendationEngineTests: XCTestCase {
         XCTAssertTrue(results.first?.isReady == true)
     }
 
-    func testMissingIngredientsIgnorePantryStaples() {
+    func testMissingSeasoningsAreIncludedInRecommendation() {
         let recipe = RecipeCatalog.recipes.first { $0.id == "broccoli-shrimp" }!
         let pantry = [
             PantryItem(id: UUID(), ingredientID: "broccoli", name: "西兰花", emoji: "🥦", quantity: 1, unit: "棵", addedAt: .now, expiryDate: nil),
@@ -23,8 +26,10 @@ final class RecommendationEngineTests: XCTestCase {
 
         let result = RecommendationEngine.recommendations(pantry: pantry, recipes: [recipe])[0]
 
-        XCTAssertTrue(result.isReady)
-        XCTAssertFalse(result.missing.contains { $0.ingredientID == "garlic" })
+        XCTAssertFalse(result.isReady)
+        XCTAssertTrue(result.missing.contains { $0.ingredientID == "garlic" })
+        XCTAssertTrue(result.missing.contains { $0.ingredientID == "cooking_oil" })
+        XCTAssertTrue(result.missing.contains { $0.ingredientID == "salt" })
     }
 
     func testExpiringIngredientBoostsScore() {
@@ -44,7 +49,7 @@ final class RecommendationEngineTests: XCTestCase {
         let ingredientIDs = IngredientCatalog.items.map(\.id)
 
         XCTAssertEqual(RecipeCatalog.recipes.count, 36)
-        XCTAssertEqual(IngredientCatalog.items.count, 50)
+        XCTAssertEqual(IngredientCatalog.items.count, 62)
         XCTAssertEqual(Set(recipeIDs).count, recipeIDs.count)
         XCTAssertEqual(Set(ingredientIDs).count, ingredientIDs.count)
     }
@@ -67,5 +72,25 @@ final class RecommendationEngineTests: XCTestCase {
             XCTAssertFalse(recipe.steps.isEmpty, "\(recipe.id) has no steps")
             XCTAssertFalse(recipe.tip.isEmpty, "\(recipe.id) has no tip")
         }
+    }
+
+    func testRecipeSeparatesPrimaryIngredientsAndSeasonings() {
+        let recipe = RecipeCatalog.recipes.first { $0.id == "tomato-egg" }!
+
+        XCTAssertEqual(recipe.primaryIngredients.map(\.ingredientID), ["tomato", "egg"])
+        XCTAssertEqual(Set(recipe.seasonings.map(\.ingredientID)), ["cooking_oil", "salt", "sugar"])
+    }
+
+    @MainActor
+    func testCustomSeasoningCategorySurvivesPersistence() throws {
+        let suiteName = "RecommendationEngineTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let store = PantryStore(defaults: defaults)
+        store.add(name: "自制辣椒油", category: .seasoning, quantity: 1, unit: "瓶", expiryDate: nil)
+        let reloadedStore = PantryStore(defaults: defaults)
+
+        XCTAssertEqual(reloadedStore.items.first?.category, .seasoning)
     }
 }

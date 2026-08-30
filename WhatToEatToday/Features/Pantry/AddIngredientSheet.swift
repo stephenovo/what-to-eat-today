@@ -14,6 +14,10 @@ struct AddIngredientSheet: View {
 
     private let columns = [GridItem(.adaptive(minimum: 82), spacing: 10)]
 
+    init(initialCategory: IngredientCategory? = nil) {
+        _category = State(initialValue: initialCategory)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -25,7 +29,7 @@ struct AddIngredientSheet: View {
                 .padding(LuluLayout.gutter)
             }
             .background(LuluPalette.canvas.ignoresSafeArea())
-            .navigationTitle("添加食材")
+            .navigationTitle(category == .seasoning ? "添加佐料" : "添加食材")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
@@ -34,13 +38,14 @@ struct AddIngredientSheet: View {
                 Button {
                     pantry.add(
                         name: name,
+                        category: selected?.category ?? category,
                         quantity: quantity,
                         unit: unit,
                         expiryDate: hasExpiry ? expiryDate : nil
                     )
                     dismiss()
                 } label: {
-                    Text(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "先选择或输入食材" : "加入我的冰箱")
+                    Text(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "先选择或输入名称" : "加入我的冰箱")
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || quantity <= 0)
@@ -54,7 +59,7 @@ struct AddIngredientSheet: View {
 
     private var searchAndCategories: some View {
         VStack(alignment: .leading, spacing: 12) {
-            TextField("搜索番茄、鸡蛋……", text: $search)
+            TextField("搜索食材或佐料……", text: $search)
                 .textFieldStyle(.roundedBorder)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
@@ -96,8 +101,8 @@ struct AddIngredientSheet: View {
 
     private var entryForm: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionHeading(title: "确认记录", subtitle: "也可以直接输入自定义食材")
-            TextField("食材名称", text: $name)
+            SectionHeading(title: "确认记录", subtitle: "也可以直接输入自定义食材或佐料")
+            TextField("名称", text: $name)
                 .textFieldStyle(.roundedBorder)
                 .onChange(of: name) { _, value in
                     if value != selected?.name { selected = nil }

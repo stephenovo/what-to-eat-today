@@ -16,6 +16,7 @@ enum IngredientCategory: String, CaseIterable, Codable, Sendable {
     case dairy = "乳品"
     case fruit = "水果"
     case staples = "主食"
+    case beverage = "饮品"
     case seasoning = "调味"
 }
 
@@ -24,6 +25,7 @@ struct PantryItem: Identifiable, Codable, Hashable, Sendable {
     var ingredientID: String?
     var name: String
     var emoji: String
+    var category: IngredientCategory? = nil
     var quantity: Double
     var unit: String
     var addedAt: Date
@@ -59,7 +61,7 @@ struct RecipeIngredient: Hashable, Sendable {
     let name: String
     let amount: String
     let emoji: String
-    let isPantryStaple: Bool
+    let isSeasoning: Bool
 }
 
 struct Recipe: Identifiable, Hashable, Sendable {
@@ -72,6 +74,9 @@ struct Recipe: Identifiable, Hashable, Sendable {
     let ingredients: [RecipeIngredient]
     let steps: [String]
     let tip: String
+
+    var primaryIngredients: [RecipeIngredient] { ingredients.filter { !$0.isSeasoning } }
+    var seasonings: [RecipeIngredient] { ingredients.filter(\.isSeasoning) }
 }
 
 struct RecipeRecommendation: Identifiable, Hashable, Sendable {

@@ -18,7 +18,13 @@ final class PantryStore {
         #endif
     }
 
-    func add(name rawName: String, quantity: Double, unit: String, expiryDate: Date?) {
+    func add(
+        name rawName: String,
+        category: IngredientCategory? = nil,
+        quantity: Double,
+        unit: String,
+        expiryDate: Date?
+    ) {
         let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty, quantity > 0 else { return }
         let catalogItem = IngredientCatalog.find(matching: name)
@@ -28,6 +34,7 @@ final class PantryStore {
                 ingredientID: catalogItem?.id,
                 name: catalogItem?.name ?? name,
                 emoji: catalogItem?.emoji ?? "🥣",
+                category: catalogItem?.category ?? category,
                 quantity: quantity,
                 unit: unit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "份" : unit,
                 addedAt: .now,
@@ -98,6 +105,9 @@ final class PantryStore {
         add(name: "鸡蛋", quantity: 6, unit: "个", expiryDate: nil)
         add(name: "面条", quantity: 300, unit: "克", expiryDate: nil)
         add(name: "黄瓜", quantity: 1, unit: "根", expiryDate: nil)
+        add(name: "食用油", quantity: 500, unit: "毫升", expiryDate: nil)
+        add(name: "食盐", quantity: 1, unit: "袋", expiryDate: nil)
+        add(name: "白糖", quantity: 1, unit: "袋", expiryDate: nil)
     }
     #endif
 }

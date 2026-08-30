@@ -9,8 +9,8 @@ enum RecommendationEngine {
         let expiringIDs = Set(pantry.filter { $0.isExpiringSoon }.compactMap(\.ingredientID))
 
         return recipes.map { recipe in
-            let matched = recipe.ingredients.filter { availableIDs.contains($0.ingredientID) || $0.isPantryStaple }
-            let missing = recipe.ingredients.filter { !availableIDs.contains($0.ingredientID) && !$0.isPantryStaple }
+            let matched = recipe.ingredients.filter { availableIDs.contains($0.ingredientID) }
+            let missing = recipe.ingredients.filter { !availableIDs.contains($0.ingredientID) }
             let expiringNames = recipe.ingredients
                 .filter { expiringIDs.contains($0.ingredientID) }
                 .map(\.name)

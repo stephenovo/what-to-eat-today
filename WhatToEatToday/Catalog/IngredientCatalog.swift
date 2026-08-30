@@ -44,12 +44,24 @@ enum IngredientCatalog {
         item("noodles", "面条", .staples, "🍜", ["挂面"], "克"),
         item("glass_noodles", "粉条", .staples, "🍜", ["红薯粉条", "粉丝"], "克"),
         item("bread", "面包", .staples, "🍞", ["吐司"], "片"),
-        item("seaweed", "紫菜", .seasoning, "🟪", ["干紫菜"], "克"),
+        item("seaweed", "紫菜", .seafood, "🟪", ["干紫菜"], "克"),
         item("scallion", "大葱", .seasoning, "🌿", ["葱", "小葱", "香葱"], "根"),
         item("dried_chili", "干辣椒", .seasoning, "🌶️", ["辣椒", "小米辣"], "根"),
         item("doubanjiang", "豆瓣酱", .seasoning, "🫙", ["郫县豆瓣酱"], "勺"),
         item("sweet_bean_paste", "甜面酱", .seasoning, "🫙", ["黄豆酱", "炸酱"], "勺"),
-        item("cola", "可乐", .seasoning, "🥤", [], "罐"),
+        item("cooking_oil", "食用油", .seasoning, "🫗", ["油", "植物油", "花生油", "菜籽油"], "毫升"),
+        item("salt", "食盐", .seasoning, "🧂", ["盐"], "克"),
+        item("sugar", "白糖", .seasoning, "🍚", ["糖", "砂糖"], "克"),
+        item("soy_sauce", "生抽", .seasoning, "🫙", ["酱油", "薄盐生抽"], "勺"),
+        item("dark_soy_sauce", "老抽", .seasoning, "🫙", ["老抽酱油"], "勺"),
+        item("vinegar", "香醋", .seasoning, "🫙", ["醋", "陈醋", "米醋"], "勺"),
+        item("cooking_wine", "料酒", .seasoning, "🍶", ["绍兴酒", "花雕酒"], "勺"),
+        item("sesame_oil", "香油", .seasoning, "🫗", ["芝麻油"], "勺"),
+        item("oyster_sauce", "蚝油", .seasoning, "🫙", [], "勺"),
+        item("starch", "淀粉", .seasoning, "🥣", ["生粉", "玉米淀粉"], "克"),
+        item("black_pepper", "黑胡椒", .seasoning, "⚫️", ["胡椒粉", "白胡椒"], "克"),
+        item("sichuan_pepper", "花椒", .seasoning, "🔴", ["花椒粉"], "克"),
+        item("cola", "可乐", .beverage, "🥤", [], "罐"),
         item("garlic", "大蒜", .seasoning, "🧄", ["蒜", "蒜头"], "瓣"),
         item("ginger", "生姜", .seasoning, "🫚", ["姜"], "块")
     ]
@@ -68,6 +80,11 @@ enum IngredientCatalog {
             let matchesQuery = term.isEmpty || ([item.name] + item.aliases).contains { normalized($0).contains(term) }
             return matchesCategory && matchesQuery
         }
+    }
+
+    static func definition(for id: String?) -> IngredientDefinition? {
+        guard let id else { return nil }
+        return items.first { $0.id == id }
     }
 
     private static func normalized(_ value: String) -> String {

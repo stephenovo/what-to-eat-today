@@ -5,10 +5,27 @@ struct PantryView: View {
     @State private var showingAdd = false
     @State private var showingCameraNote = false
     @State private var query = ""
+    @State private var addCategory: IngredientCategory?
 
     private var filteredItems: [PantryItem] {
         guard !query.isEmpty else { return pantry.items }
         return pantry.items.filter { $0.name.localizedCaseInsensitiveContains(query) }
+    }
+
+    private var foodItems: [PantryItem] {
+        filteredItems.filter { itemCategory($0) != .seasoning }
+    }
+
+    private var seasoningItems: [PantryItem] {
+        filteredItems.filter { itemCategory($0) == .seasoning }
+    }
+
+    private var totalFoodCount: Int {
+        pantry.items.filter { itemCategory($0) != .seasoning }.count
+    }
+
+    private var totalSeasoningCount: Int {
+        pantry.items.filter { itemCategory($0) == .seasoning }.count
     }
 
     var body: some View {
@@ -22,21 +39,13 @@ struct PantryView: View {
                 emptyState
             } else {
                 List {
-                    ForEach(filteredItems) { item in
-                        PantryItemRow(item: item)
-                            .listRowBackground(LuluPalette.canvas)
-                            .listRowSeparator(.hidden)
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) { pantry.remove(item) } label: {
-                                    Label("删除", systemImage: "trash")
-                                }
-                            }
-                    }
+                    pantrySection(title: "食材", icon: "carrot.fill", items: foodItems)
+                    pantrySection(title: "佐料", icon: "takeoutbag.and.cup.and.straw.fill", items: seasoningItems)
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
                 .background(LuluPalette.canvas)
-                .searchable(text: $query, prompt: "搜索冰箱里的食材")
+                .searchable(text: $query, prompt: "搜索冰箱里的食材或佐料")
             }
         }
         .background(LuluPalette.canvas.ignoresSafeArea())
@@ -47,34 +56,79 @@ struct PantryView: View {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button { showingCameraNote = true } label: { Image(systemName: "camera.fill") }
                     .accessibilityLabel("拍照录入")
-                Button { showingAdd = true } label: { Image(systemName: "plus.circle.fill") }
-                    .accessibilityLabel("手动添加食材")
+                Button { openAdd() } label: { Image(systemName: "plus.circle.fill") }
+                    .accessibilityLabel("手动添加食材或佐料")
             }
         }
-        .sheet(isPresented: $showingAdd) { AddIngredientSheet() }
+        .sheet(isPresented: $showingAdd) { AddIngredientSheet(initialCategory: addCategory) }
         .sheet(isPresented: $showingCameraNote) { CameraComingSoonView() }
     }
 
     private var topSummary: some View {
-        HStack(spacing: 14) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text("\(pantry.items.count)")
-                    .font(.system(size: 30, weight: .heavy, design: .rounded))
-                Text("样食材已记录在这台手机")
-                    .font(.system(size: 12))
-                    .foregroundStyle(LuluPalette.sage)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("\(pantry.items.count)")
+                        .font(.system(size: 30, weight: .heavy, design: .rounded))
+                    Text("\(totalFoodCount) 样食材 · \(totalSeasoningCount) 种佐料")
+                        .font(.system(size: 12))
+                        .foregroundStyle(LuluPalette.sage)
+                }
+                Spacer()
+                Image(systemName: "refrigerator.fill")
+                    .font(.system(size: 28))
+                    .foregroundStyle(LuluPalette.green)
             }
-            Spacer()
-            Button { showingAdd = true } label: {
-                Label("添加", systemImage: "plus")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(LuluPalette.paper)
-                    .padding(.horizontal, 16)
-                    .frame(height: 40)
-                    .background(LuluPalette.ink, in: Capsule())
+            HStack(spacing: 10) {
+                addButton("添加食材", icon: "carrot.fill") { openAdd() }
+                addButton("添加佐料", icon: "takeoutbag.and.cup.and.straw.fill") { openAdd(category: .seasoning) }
             }
         }
         .luluCard()
+    }
+
+    private func addButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(LuluPalette.paper)
+                .frame(maxWidth: .infinity)
+                .frame(height: 40)
+                .background(LuluPalette.ink, in: Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func pantrySection(title: String, icon: String, items: [PantryItem]) -> some View {
+        if !items.isEmpty {
+            Section {
+                ForEach(items) { item in
+                    PantryItemRow(item: item)
+                        .listRowBackground(LuluPalette.canvas)
+                        .listRowSeparator(.hidden)
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) { pantry.remove(item) } label: {
+                                Label("删除", systemImage: "trash")
+                            }
+                        }
+                }
+            } header: {
+                Label(title, systemImage: icon)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(LuluPalette.ink)
+                    .textCase(nil)
+            }
+        }
+    }
+
+    private func openAdd(category: IngredientCategory? = nil) {
+        addCategory = category
+        showingAdd = true
+    }
+
+    private func itemCategory(_ item: PantryItem) -> IngredientCategory? {
+        item.category ?? IngredientCatalog.definition(for: item.ingredientID)?.category
     }
 
     private var emptyState: some View {
@@ -84,13 +138,16 @@ struct PantryView: View {
                 .font(.system(size: 68))
             Text("冰箱还是空白的")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
-            Text("手动记下家里已有的食材，噜噜就能开始推荐。")
+            Text("记下家里的食材和佐料，噜噜就能给出更准确的推荐。")
                 .font(.system(size: 14))
                 .foregroundStyle(LuluPalette.sage)
                 .multilineTextAlignment(.center)
-            Button("手动添加") { showingAdd = true }
-                .buttonStyle(.borderedProminent)
-                .tint(LuluPalette.ink)
+            HStack(spacing: 10) {
+                Button("添加食材") { openAdd() }
+                Button("添加佐料") { openAdd(category: .seasoning) }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(LuluPalette.ink)
             Spacer()
         }
         .padding(24)

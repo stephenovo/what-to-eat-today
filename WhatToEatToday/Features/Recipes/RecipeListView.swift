@@ -59,7 +59,7 @@ struct RecipeListView: View {
             Text("不纠结，看看现在能做什么")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundStyle(LuluPalette.ink)
-            Text("推荐只基于你记录在这台手机里的食材")
+            Text("推荐只基于你记录在这台手机里的食材和佐料")
                 .font(.system(size: 12))
                 .foregroundStyle(LuluPalette.sage)
         }
